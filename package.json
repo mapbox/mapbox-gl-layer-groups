@@ -1,0 +1,24 @@
+{
+  "name": "mapbox-gl-js-layer-groups",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "eslint . && tap test.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "lodash.assign": "^4.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^3.9.0",
+    "eslint-config-mourner": "^2.0.1",
+    "flow-remove-types": "1.0.4",
+    "gl": "^4.0.2",
+    "jsdom": "^9.8.3",
+    "mapbox-gl": "^0.27.0",
+    "sinon": "^1.17.6",
+    "tap": "^8.0.0"
+  }
+}
