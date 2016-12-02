@@ -36,9 +36,32 @@ function addGroup(map, id, layers, beforeId) {
  * @param {string} id The id of the group to be removed.
  */
 function removeGroup(map, id) {
-    var ids = getGroupLayers(map, id);
-    for (var j = 0; j < ids.length; j++) {
-        map.removeLayer(ids[j]);
+    var layers = map.getStyle().layers;
+    for (var i = 0; i < layers.length; i++) {
+        if (layers[i].metadata.group === id) {
+            map.removeLayer(layers[i].id);
+        }
+    }
+}
+
+/**
+ * Remove a layer group and all of its layers from the map.
+ *
+ * @param {Map} map
+ * @param {string} id The id of the group to be removed.
+ */
+function moveGroup(map, id, beforeId) {
+    if (beforeId && !isLayer(map, beforeId)) {
+        beforeId = getGroupFirstLayer(map, beforeId);
+    } else if (beforeId && getLayerGroup(map, beforeId)) {
+        beforeId = getGroupFirstLayer(map, getLayerGroup(map, beforeId));
+    }
+
+    var layers = map.getStyle().layers;
+    for (var i = 0; i < layers.length; i++) {
+        if (layers[i].metadata.group === id) {
+            map.moveLayer(layers[i].id, beforeId);
+        }
     }
 }
 
@@ -94,24 +117,10 @@ function isLayer(map, id) {
     return !!map.getLayer(id);
 }
 
-
-function getGroupLayers(map, groupId) {
-    var firstIndex = getGroupFirstIndex(map, groupId);
-    var lastIndex = getGroupLastIndex(map, groupId);
-
-    if (firstIndex === -1 || lastIndex === -1) return [];
-
-    var ids = [];
-    for (var i = firstIndex; i <= lastIndex; i++) {
-        ids.push(getLayerFromIndex(map, i));
-    }
-
-    return ids;
-}
-
 module.exports = {
     addGroup,
     removeGroup,
+    moveGroup,
     getGroupFirstLayer,
     getGroupLastLayer
 };

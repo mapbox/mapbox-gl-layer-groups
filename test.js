@@ -185,6 +185,102 @@ t.test('removeGroup', function(t) {
     t.end();
 });
 
+t.test('moveGroup', function(t) {
+
+    t.test('a non-existent id', function(t) {
+        createMap([], function(err, map) {
+            t.error(err);
+            groups.moveGroup(map, 'nonexistent');
+            t.deepEqual(map.getStyle().layers, []);
+            t.end();
+        });
+    });
+
+    t.test('a group before an ungrouped layer', function(t) {
+        createMap(
+            [
+                l('layer1'),
+                l('layer2', 'group1'),
+                l('layer3', 'group1')
+            ],
+            function(err, map) {
+                t.error(err);
+                groups.moveGroup(map, 'group1', 'layer1');
+                t.deepEqual(map.getStyle().layers, [
+                    l('layer2', 'group1'),
+                    l('layer3', 'group1'),
+                    l('layer1')
+                ]);
+                t.end();
+            }
+        );
+    });
+
+    t.test('a group before a grouped layer', function(t) {
+        createMap(
+            [
+                l('layer1', 'group1'),
+                l('layer2', 'group1'),
+                l('layer3', 'group2'),
+                l('layer4', 'group2')
+            ],
+            function(err, map) {
+                t.error(err);
+                groups.moveGroup(map, 'group2', 'layer2');
+                t.deepEqual(map.getStyle().layers, [
+                    l('layer3', 'group2'),
+                    l('layer4', 'group2'),
+                    l('layer1', 'group1'),
+                    l('layer2', 'group1')
+                ]);
+                t.end();
+            }
+        );
+    });
+
+    t.test('a group before a group', function(t) {
+        createMap(
+            [
+                l('layer1', 'group1'),
+                l('layer2', 'group2'),
+                l('layer3', 'group2')
+            ],
+            function(err, map) {
+                t.error(err);
+                groups.moveGroup(map, 'group2', 'group1');
+                t.deepEqual(map.getStyle().layers, [
+                    l('layer2', 'group2'),
+                    l('layer3', 'group2'),
+                    l('layer1', 'group1')
+                ]);
+                t.end();
+            }
+        );
+    });
+
+    t.test('a group to the end', function(t) {
+        createMap(
+            [
+                l('layer1', 'group1'),
+                l('layer2', 'group1'),
+                l('layer3')
+            ],
+            function(err, map) {
+                t.error(err);
+                groups.moveGroup(map, 'group1');
+                t.deepEqual(map.getStyle().layers, [
+                    l('layer3'),
+                    l('layer1', 'group1'),
+                    l('layer2', 'group1')
+                ]);
+                t.end();
+            }
+        );
+    });
+
+    t.end();
+});
+
 function l(layerId, groupId) {
     return {id: layerId, type: 'background', metadata: {group: groupId}};
 }

@@ -17,7 +17,7 @@
     "flow-remove-types": "1.0.4",
     "gl": "^4.0.2",
     "jsdom": "^9.8.3",
-    "mapbox-gl": "^0.27.0",
+    "mapbox-gl": "^0.28.0",
     "sinon": "^1.17.6",
     "tap": "^8.0.0"
   }
