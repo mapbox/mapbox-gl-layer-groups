@@ -74,7 +74,7 @@ t.test('addGroup', function(t) {
         });
     });
 
-    t.test('at the bottom of a style (without a "before")', function(t) {
+    t.test('at the bottom of a style (without a "beforeId")', function(t) {
         createMap(
             [l('layer1')],
             function(err, map) {
@@ -148,6 +148,104 @@ t.test('addGroup', function(t) {
                 t.end();
             }
         );
+    });
+
+    t.end();
+});
+
+t.test('addLayerToGroup', function(t) {
+
+    t.test('at the bottom of a group (without a "beforeId")', function(t) {
+        createMap(
+            [l('layer1', 'group1')],
+            function(err, map) {
+                t.error(err);
+
+                groups.addLayerToGroup(map, 'group1', l('layer2'));
+
+                t.deepEqual(map.getStyle().layers, [
+                    l('layer1', 'group1'),
+                    l('layer2', 'group1')
+                ]);
+
+                t.end();
+            }
+        );
+    });
+
+    t.test('before a layer within the same group', function(t) {
+        createMap(
+            [l('layer1', 'group1')],
+            function(err, map) {
+                t.error(err);
+
+                groups.addLayerToGroup(map, 'group1', l('layer2'), 'layer1');
+
+                t.deepEqual(map.getStyle().layers, [
+                    l('layer2', 'group1'),
+                    l('layer1', 'group1')
+                ]);
+
+                t.end();
+            }
+        );
+    });
+
+    t.test('to a non-existant group', function(t) {
+        createMap([l('layer1', 'group1')], function(err, map) {
+            t.error(err);
+
+            groups.addLayerToGroup(map, 'group2', l('layer2'));
+
+            t.deepEqual(map.getStyle().layers, [
+                l('layer1', 'group1'),
+                l('layer2', 'group2')
+            ]);
+
+            t.end();
+        });
+    });
+
+    t.test('before a layer within a different group', function(t) {
+        createMap(
+            [l('layer1', 'group1'), l('layer2', 'group2')],
+            function(err, map) {
+                t.error(err);
+
+                t.throws(function() {
+                    groups.addLayerToGroup(map, 'group1', l('layer3'), 'layer2');
+                });
+
+                t.end();
+            }
+        );
+    });
+
+    t.test('before a group', function(t) {
+        createMap(
+            [l('layer1', 'group1')],
+            function(err, map) {
+                t.error(err);
+
+                t.throws(function() {
+                    groups.addLayerToGroup(map, 'group1', l('layer3'), 'group1');
+                });
+
+                t.end();
+            }
+        );
+    });
+
+    t.test('before a non-existant group', function(t) {
+        createMap([], function(err, map) {
+            t.error(err);
+
+            t.throws(function() {
+                groups.addLayerToGroup(map, 'group1', l('layer1'), 'group1');
+            });
+
+            t.end();
+        });
     });
 
     t.end();

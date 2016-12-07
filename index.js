@@ -9,18 +9,37 @@ var assign = require('lodash.assign');
  * @param {string} id The id of the new group
  * @param {Array<Object>} layers The Mapbox style spec layers of the new group
  * @param {string} [beforeId] The layer id or group id after which the group
- *     will be inserted after. If ommitted the group is added to the bottom of
- *     the style.
+ *     will be inserted. If ommitted the group is added to the bottom of the
+ *     style.
  */
 function addGroup(map, id, layers, beforeId) {
     var beforeLayerId = normalizeBeforeId(map, beforeId);
-
     for (var i = 0; i < layers.length; i++) {
-        var layer = layers[i];
-        var groupedMetadata = assign({}, layers[i].metadata || {}, {group: id});
-        var groupedLayer = assign({}, layer, {metadata: groupedMetadata});
-        map.addLayer(groupedLayer, beforeLayerId);
+        addLayerToGroup(map, id, layers[i], beforeLayerId, true);
     }
+}
+
+/**
+ * Add a single layer to an existing layer group.
+ *
+ * @param {Map} map
+ * @param {string} groupId The id of group
+ * @param {Object} layer The Mapbox style spec layer
+ * @param {string} [beforeId] An existing layer id after which the new layer
+ *     will be inserted. If ommitted the layer is added to the bottom of
+ *     the group.
+ */
+function addLayerToGroup(map, groupId, layer, beforeId) {
+    var ignoreBeforeIdCheck = arguments[4];
+
+    if (beforeId && !ignoreBeforeIdCheck && (!isLayer(map, beforeId) || getLayerGroup(map, beforeId) !== groupId)) {
+        throw new Error('beforeId must be the id of a layer within the same group');
+    } else if (!beforeId && !ignoreBeforeIdCheck) {
+        beforeId = getLayerIdFromIndex(map, getGroupFirstLayerId(map, groupId) - 1);
+    }
+
+    var groupedLayer = assign({}, layer, {metadata: assign({}, layer.metadata || {}, {group: groupId})});
+    map.addLayer(groupedLayer, beforeId);
 }
 
 /**
@@ -55,16 +74,6 @@ function moveGroup(map, id, beforeId) {
     }
 }
 
-function normalizeBeforeId(map, beforeId) {
-    if (beforeId && !isLayer(map, beforeId)) {
-        return getGroupFirstLayer(map, beforeId);
-    } else if (beforeId && getLayerGroup(map, beforeId)) {
-        return getGroupFirstLayer(map, getLayerGroup(map, beforeId));
-    } else {
-        return beforeId;
-    }
-}
-
 /**
  * Get the id of the first layer in a group.
  *
@@ -72,8 +81,8 @@ function normalizeBeforeId(map, beforeId) {
  * @param {string} id The id of the group.
  * @returns {string}
  */
-function getGroupFirstLayer(map, id) {
-    return getLayerFromIndex(map, getGroupFirstIndex(map, id));
+function getGroupFirstLayerId(map, id) {
+    return getLayerIdFromIndex(map, getGroupFirstLayerIndex(map, id));
 }
 
 /**
@@ -83,11 +92,11 @@ function getGroupFirstLayer(map, id) {
  * @param {string} id The id of the group.
  * @returns {string}
  */
-function getGroupLastLayer(map, id) {
-    return getLayerFromIndex(map, getGroupLastIndex(map, id));
+function getGroupLastLayerId(map, id) {
+    return getLayerIdFromIndex(map, getGroupLastLayerIndex(map, id));
 }
 
-function getGroupFirstIndex(map, id) {
+function getGroupFirstLayerIndex(map, id) {
     var layers = map.getStyle().layers;
     for (var i = 0; i < layers.length; i++) {
         if (layers[i].metadata.group === id) return i;
@@ -95,15 +104,15 @@ function getGroupFirstIndex(map, id) {
     return -1;
 }
 
-function getGroupLastIndex(map, id) {
+function getGroupLastLayerIndex(map, id) {
     var layers = map.getStyle().layers;
-    var i = getGroupFirstIndex(map, id);
+    var i = getGroupFirstLayerIndex(map, id);
     if (i === -1) return -1;
     while (i < layers.length && (layers[i].id === id || layers[i].metadata.group === id)) i++;
     return i - 1;
 }
 
-function getLayerFromIndex(map, index) {
+function getLayerIdFromIndex(map, index) {
     if (index === -1) return undefined;
     var layers = map.getStyle().layers;
     return layers[index] && layers[index].id;
@@ -117,10 +126,21 @@ function isLayer(map, id) {
     return !!map.getLayer(id);
 }
 
+function normalizeBeforeId(map, beforeId) {
+    if (beforeId && !isLayer(map, beforeId)) {
+        return getGroupFirstLayerId(map, beforeId);
+    } else if (beforeId && getLayerGroup(map, beforeId)) {
+        return getGroupFirstLayerId(map, getLayerGroup(map, beforeId));
+    } else {
+        return beforeId;
+    }
+}
+
 module.exports = {
     addGroup,
     removeGroup,
     moveGroup,
-    getGroupFirstLayer,
-    getGroupLastLayer
+    addLayerToGroup,
+    getGroupFirstLayer: getGroupFirstLayerId,
+    getGroupLastLayer: getGroupLastLayerId
 };
