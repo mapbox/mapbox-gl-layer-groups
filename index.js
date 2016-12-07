@@ -13,19 +13,13 @@ var assign = require('lodash.assign');
  *     the style.
  */
 function addGroup(map, id, layers, beforeId) {
-    if (beforeId) {
-        if (!isLayer(map, beforeId)) {
-            beforeId = getGroupFirstLayer(map, beforeId);
-        } else if (getLayerGroup(map, beforeId)) {
-            beforeId = getGroupFirstLayer(map, getLayerGroup(map, beforeId));
-        }
-    }
+    var beforeLayerId = normalizeBeforeId(map, beforeId);
 
     for (var i = 0; i < layers.length; i++) {
         var layer = layers[i];
         var groupedMetadata = assign({}, layers[i].metadata || {}, {group: id});
         var groupedLayer = assign({}, layer, {metadata: groupedMetadata});
-        map.addLayer(groupedLayer, beforeId);
+        map.addLayer(groupedLayer, beforeLayerId);
     }
 }
 
@@ -51,17 +45,23 @@ function removeGroup(map, id) {
  * @param {string} id The id of the group to be removed.
  */
 function moveGroup(map, id, beforeId) {
-    if (beforeId && !isLayer(map, beforeId)) {
-        beforeId = getGroupFirstLayer(map, beforeId);
-    } else if (beforeId && getLayerGroup(map, beforeId)) {
-        beforeId = getGroupFirstLayer(map, getLayerGroup(map, beforeId));
-    }
+    var beforeLayerId = normalizeBeforeId(map, beforeId);
 
     var layers = map.getStyle().layers;
     for (var i = 0; i < layers.length; i++) {
         if (layers[i].metadata.group === id) {
-            map.moveLayer(layers[i].id, beforeId);
+            map.moveLayer(layers[i].id, beforeLayerId);
         }
+    }
+}
+
+function normalizeBeforeId(map, beforeId) {
+    if (beforeId && !isLayer(map, beforeId)) {
+        return getGroupFirstLayer(map, beforeId);
+    } else if (beforeId && getLayerGroup(map, beforeId)) {
+        return getGroupFirstLayer(map, getLayerGroup(map, beforeId));
+    } else {
+        return beforeId;
     }
 }
 
