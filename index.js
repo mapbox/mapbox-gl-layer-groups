@@ -58,10 +58,12 @@ function removeGroup(map, id) {
 }
 
 /**
- * Remove a layer group and all of its layers from the map.
+ * Move a layer group and all of its layers after a given layer.
  *
  * @param {Map} map
  * @param {string} id The id of the group to be removed.
+ * @param {string} beforeId An existing layer id after which the group
+ *     layers will be moved to.
  */
 function moveGroup(map, id, beforeId) {
     var beforeLayerId = normalizeBeforeId(map, beforeId);
