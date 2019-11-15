@@ -35,7 +35,14 @@ function addLayerToGroup(map, groupId, layer, beforeId) {
     if (beforeId && !ignoreBeforeIdCheck && (!isLayer(map, beforeId) || getLayerGroup(map, beforeId) !== groupId)) {
         throw new Error('beforeId must be the id of a layer within the same group');
     } else if (!beforeId && !ignoreBeforeIdCheck) {
-        beforeId = getLayerIdFromIndex(map, getGroupFirstLayerId(map, groupId) - 1);
+
+	const lastLayerIndex = getGroupLastLayerIndex(map, groupId)
+
+	if (lastLayerIndex === -1) {
+	    throw new Error(`the "${ groupId }" layer group does not exist`)
+	}
+
+	beforeId = getLayerIdFromIndex(map, lastLayerIndex + 1)
     }
 
     var groupedLayer = assign({}, layer, {metadata: assign({}, layer.metadata || {}, {group: groupId})});
